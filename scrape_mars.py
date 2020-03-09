@@ -6,8 +6,8 @@ import time
 from selenium import webdriver
 
 def init_browser():
-    executable_path = {'executable_path': '/usr/local/bin/chromedriver'}
-    browser = Browser('chrome', **executable_path, headless=False)
+    executable_path = {'executable_path':'C:\Drivers\Webdriver\chromedriver_win32\chromedriver'}
+    return Browser('chrome', **executable_path, headless = False)
 
 
 def scrape():
@@ -26,7 +26,7 @@ def scrape():
     news_title = article.find('div', class_='content_title').text
     news_date = article.find('div', class_='list_date').text
 
-    mars_data['news_date'] = news_date
+    # mars_data['news_date'] = news_date
     mars_data['news_title'] = news_title
     mars_data['sunnary'] = news_para
 
@@ -36,7 +36,7 @@ def scrape():
     html = Browser.html
     soup = BeautifulSoup(html, 'lxml')
     image = soup.find('img', class_='thumb')['src']
-    image_url = 'https://www.jpl.nasa.gov' + pic 
+    image_url = 'https://www.jpl.nasa.gov' +pic 
     featured_image_url = image_url
 
     mars_data['featured_image_url'] = featured_image_url
@@ -58,6 +58,9 @@ def scrape():
     facts_html = space.to_html()
     facts_html = facts_html.replace('\n', '')
     mars_data['tabel_mars'] = facts_html
+    mars_data['hemisphere_image+'] = full_hemisphere_dict
+
+    return mars_data
 
 def hemisphere_images():
     image_one = 'https://astrogeology.usgs.gov//search/map/Mars/Viking/valles_marineris_enhanced'

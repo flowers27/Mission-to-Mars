@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 from splinter import Browser
 import os
 import pandas as pd
-import time
+from time import sleep
 from selenium import webdriver
 import requests
 
@@ -15,9 +15,10 @@ def scrape():
     browser = init_browser()
     mars_data = {}
     words = {}
-    url = ('https://mars.nasa.gov/news/')
-    response = requests.get(url)
+    nasa_url = ('https://mars.nasa.gov/news/')
+    response = requests.get(nasa_url)
     soup =BeautifulSoup(response.text, 'lxml')
+    while not browser.is_element_not_present_by_tag("div", wait_time=5):pass
     words = {}
     titles = soup.find_all('div', class_ ="content_title")    
     news = soup.find('div', class_ = 'content_title').text
@@ -27,19 +28,18 @@ def scrape():
 
     # mars_data['news_date'] = news_date
     
-    url = ('https://www.jpl.nasa.gov/spaceimages/?search=&category=Mars')
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'lxml')
-    images = soup.find_all('a', class_='fancybox')
-    pic_src = []
-    for image in images:
-        pic = image['data-fancybox-href']
-    pic_src.append(pic)
-    featured_image_url = 'https://www.jpl.nasa.gov' + pic
-    mars_data['featured_image_url'] = featured_image_url
+    jpl_url = ('https://www.jpl.nasa.gov/spaceimages/?search=&category=Mars')
+    browser.visit(jpl_url)
+    html = browser.html
+    soup = BeautifulSoup(html, "html.parser")
+    
+    main_url = "https://www.jpl.nasa.gov" 
+    featured_image_url = soup.find("article")["style"].replace("background_image: url(","").replace(");", "")[1:1]
 
-    url = ('https://twitter.com/marswxreport?lang=en')
-    response = requests.get(url)
+    featured_image_url = main_url + featured_image_url
+    
+    tweet_url = ('https://twitter.com/marswxreport?lang=en')
+    response = requests.get(tweet_url)
     soup = BeautifulSoup(response.text, 'lxml')
     contents = soup.find_all('div', class_='content')
     climate = []
@@ -57,45 +57,34 @@ def scrape():
     facts_html = space.to_html()
     facts_html = facts_html.replace('\n', '')
 
-    url = ('https://astrogeology.usgs.gov//search/map/Mars/Viking/valles_marineris_enhanced')
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'lxml')
-    valles_marineris_img = soup.find_all('div', class_='wide-image-wrapper')
-    for img in valles_marineris_img:
-        pic = img.find('li')
-    valles_image = pic.find('a')['href']
-    valles_marineris_title = soup.find('h2', class_='title').text
-    valles_hemisphere = {"Title": valles_marineris_title, 'url': valles_image}
+    base_hemisphere_url = "https://astrogeology.usgs.gov"
+    url = "https://astrogeology.usgs.gov/search/results?q=hemisphere+enhanced&k1=target&v1=Mars"
+    browser.visit(url)
 
-    url = ('https://astrogeology.usgs.gov//search/map/Mars/Viking/cerberus_enhanced')
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'lxml')
-    cerberus_image = soup.find_all('div', class_='wide-image-wrapper')
-    for image in cerberus_image:
-        pic = image.find('li')
-    photo = pic.find('a')['href']
-    cerberus_title = soup.find('h2', class_='title').text
-    cerberus_hemisphere = {"Title": cerberus_title, 'url': photo}
+    browser.visit(url)
+    html = browser.html
+    soup = BeautifulSoup(html, 'html.parser')
+    main_url = soup.find_all('div', class_='item')
+    hemisphere_image_urls = []
+    titles = []
 
-    url = ('https://astrogeology.usgs.gov//search/map/Mars/Viking/schiaparelli_enhanced')
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'lxml')
-    schiaparelli_image = soup.find_all('div', class_='wide-image-wrapper')
-    for image in schiaparelli_image:
-        pic = image.find('li')
-    photo = pic.find('a')['href']
-    schiaparelli_title = soup.find('h2', class_='title').text
-    schiaparelli_hemisphere = {'Title': schiaparelli_title, 'url': photo}
 
-    url = ('https://astrogeology.usgs.gov//search/map/Mars/Viking/syrtis_major_enhanced')
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'lxml')
-    major_image = soup.find_all('div', class_='wide-image-wrapper')
-    for image in major_image:
-        pic = image.find('li')
-    photo = pic.find('a')['href']
-    syrtris_title = soup.find('h2', class_='title').text
-    syrtris_hemisphere = {'Title': syrtris_title, 'url': photo}
+    for photo in main_url:
+        title = photo.find('h3').text
+        url = photo.find('a')['href']
+        space_hemisphere_url = base_hemisphere_url + url
+    
+    browser.visit(space_hemisphere_url)
+    
+    html = browser.html
+    soup = BeautifulSoup(html, 'html.parser')
+    hemispheres_images = soup.find('div', class_='downloads')
+    hemisphere_image_url = hemispheres_images.find('a')['href']
+         
+    img_data = dict({'title': title, 'img_url':hemisphere_image_url})
+    hemisphere_image_urls.append(img_data)
+    
+    mars_data["hemisphere_image_urls"] = hemisphere_image_urls
     
     return mars_data
 

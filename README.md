@@ -8,11 +8,6 @@ Using Jupyter Notebook, BeautifulSoup, Pandas, and Requests/Splinter.
 Trilogy Education Services © 2019. All Rights Reserved.
 
 
-!
-
-
-
-'
 ### Copyright
 
 Trilogy Education Services © 2019. All Rights Reserved.
